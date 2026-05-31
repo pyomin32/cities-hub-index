@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>혁신 허브 지수 — 도시 랭킹 & 시각화</title>
+<style>
+  :root {
+    --bg: #0f1116;
+    --panel: #181b22;
+    --panel-2: #1f2530;
+    --line: #2a3140;
+    --text: #e7ecf3;
+    --muted: #94a0b3;
+    --accent: #4f9dff;
+    --accent-2: #7c5cff;
+    --good: #38d39f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Pretendard", -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  header {
+    padding: 36px 24px 20px;
+    background: radial-gradient(1200px 300px at 20% -40%, rgba(124,92,255,.25), transparent),
+                radial-gradient(900px 300px at 90% -60%, rgba(79,157,255,.25), transparent);
+    border-bottom: 1px solid var(--line);
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -.5px; }
+  header p { margin: 0; color: var(--muted); font-size: 14px; }
+  nav {
+    display: flex; gap: 8px; margin-top: 22px;
+  }
+  nav button {
+    background: var(--panel); color: var(--muted);
+    border: 1px solid var(--line); padding: 9px 18px;
+    border-radius: 999px; cursor: pointer; font-size: 14px; font-weight: 600;
+    transition: .15s;
+  }
+  nav button:hover { color: var(--text); }
+  nav button.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff; border-color: transparent;
+  }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
+  .controls label { font-size: 13px; color: var(--muted); }
+  select, input[type="search"] {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 12px; font-size: 14px;
+  }
+  input[type="search"] { min-width: 200px; }
+  .count { margin-left: auto; color: var(--muted); font-size: 13px; }
+
+  .table-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th {
+    position: sticky; top: 0; background: var(--panel-2); text-align: right;
+    padding: 11px 12px; font-weight: 600; color: var(--muted); cursor: pointer;
+    white-space: nowrap; border-bottom: 1px solid var(--line); user-select: none;
+  }
+  thead th:first-child, thead th.txt { text-align: left; }
+  thead th:hover { color: var(--text); }
+  thead th .arrow { color: var(--accent); font-size: 10px; }
+  tbody td { padding: 9px 12px; text-align: right; border-bottom: 1px solid rgba(42,49,64,.5); white-space: nowrap; }
+  tbody td.txt { text-align: left; }
+  tbody tr:hover { background: var(--panel-2); }
+  .rank-badge {
+    display: inline-block; min-width: 26px; text-align: center; font-weight: 700;
+    color: var(--muted);
+  }
+  tr:nth-child(1) .rank-badge { color: #ffd166; }
+  tr:nth-child(2) .rank-badge { color: #c9d4e3; }
+  tr:nth-child(3) .rank-badge { color: #e0915a; }
+  .city { font-weight: 600; }
+  .flag { color: var(--muted); font-size: 11px; margin-left: 6px; }
+  .bar-cell { width: 160px; }
+  .bar-track { background: var(--panel-2); border-radius: 5px; height: 9px; width: 100%; overflow: hidden; }
+  .bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 5px; }
+  .tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(56,211,159,.15); color: var(--good); }
+
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+  figure {
+    margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    overflow: hidden; transition: .15s;
+  }
+  figure:hover { transform: translateY(-3px); border-color: var(--accent); }
+  figure img { width: 100%; display: block; background: #fff; cursor: zoom-in; }
+  figcaption { padding: 12px 14px; }
+  figcaption b { font-size: 14px; }
+  figcaption p { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); }
+
+  /* lightbox */
+  #lightbox {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85);
+    z-index: 50; align-items: center; justify-content: center; cursor: zoom-out; padding: 30px;
+  }
+  #lightbox.open { display: flex; }
+  #lightbox img { max-width: 95%; max-height: 95%; border-radius: 8px; }
+
+  footer { color: var(--muted); font-size: 12px; text-align: center; padding: 30px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>혁신 허브 지수 <span style="color:var(--muted);font-weight:400">— 67개 도시</span></h1>
+    <p>모레티 《직업의 지리학》 기반 6개 지표로 계산한 도시 허브 지수 랭킹과 시각화.</p>
+    <nav>
+      <button data-view="rank" class="active">랭킹</button>
+      <button data-view="viz">시각화</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- 랭킹 -->
+  <section id="rank" class="view active">
+    <div class="controls">
+      <label>기준
+        <select id="dataset">
+          <option value="ranking">종합 허브 지수 (동일가중)</option>
+          <option value="innovation">혁신중시 지수</option>
+          <option value="robust">Robust 순위 (SMAA)</option>
+        </select>
+      </label>
+      <input type="search" id="search" placeholder="도시 / 국가 검색…" />
+      <span class="count" id="count"></span>
+    </div>
+    <div class="table-card">
+      <table id="tbl">
+        <thead><tr id="thead"></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 시각화 -->
+  <section id="viz" class="view">
+    <div class="gallery" id="gallery"></div>
+  </section>
+</main>
+
+<div id="lightbox"><img id="lightbox-img" alt="" /></div>
+
+<footer>cities-analysis · 데이터 출처: OECD · World Bank · 수동 입력(VC) — <code>web/build.py</code> 로 재생성</footer>
+
+<script src="data.js"></script>
+<script>
+const D = window.DATA;
+
+// ---- 컬럼 정의 (데이터셋별 표시 열) ----
+const IND = D.indicators;
+const COLS = {
+  ranking: [
+    { key: "rank", label: "#", type: "rank" },
+    { key: "city", label: "도시", type: "city" },
+    { key: "hub_index", label: "허브 지수", type: "bar" },
+    { key: "bachelors_pct_25_64", label: IND.bachelors_pct_25_64, type: "num" },
+    { key: "pct_patents_per_100k", label: IND.pct_patents_per_100k, type: "num" },
+    { key: "gdp_per_capita_ppp", label: IND.gdp_per_capita_ppp, type: "num" },
+    { key: "labour_productivity", label: IND.labour_productivity, type: "num" },
+    { key: "pop_growth_rate", label: IND.pop_growth_rate, type: "num" },
+    { key: "startup_ecosystem_score", label: IND.startup_ecosystem_score, type: "num" },
+  ],
+  innovation: [
+    { key: "rank", label: "#", type: "rank" },
+    { key: "city", label: "도시", type: "city" },
+    { key: "innovation_index", label: "혁신 지수", type: "bar" },
+    { key: "pct_patents_per_100k", label: IND.pct_patents_per_100k, type: "num" },
+    { key: "startup_ecosystem_score", label: IND.startup_ecosystem_score, type: "num" },
+    { key: "bachelors_pct_25_64", label: IND.bachelors_pct_25_64, type: "num" },
+    { key: "gdp_per_capita_ppp", label: IND.gdp_per_capita_ppp, type: "num" },
+  ],
+  robust: [
+    { key: "robust_rank", label: "#", type: "rank" },
+    { key: "city", label: "도시", type: "city" },
+    { key: "expected_rank", label: "기대 순위", type: "num" },
+    { key: "p_top5", label: "Top5 확률", type: "pct" },
+    { key: "p_top10", label: "Top10 확률", type: "pct" },
+    { key: "median", label: "중앙값 순위", type: "num" },
+    { key: "core", label: "코어", type: "core" },
+  ],
+};
+
+let current = "ranking";
+let sortKey = null, sortDir = -1;
+
+const $ = (id) => document.getElementById(id);
+
+function fmt(v, type) {
+  if (v === null || v === undefined) return "—";
+  if (type === "pct") return (v * 100).toFixed(1) + "%";
+  if (typeof v === "number") {
+    if (Math.abs(v) >= 1000) return v.toLocaleString("en-US", { maximumFractionDigits: 0 });
+    return v.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  }
+  return v;
+}
+
+function render() {
+  const cols = COLS[current];
+  const idxKey = cols.find((c) => c.type === "bar")?.key;
+  let rows = D[current].slice();
+
+  // 검색
+  const q = $("search").value.trim().toLowerCase();
+  if (q) rows = rows.filter((r) => (r.city + " " + r.country).toLowerCase().includes(q));
+
+  // 정렬
+  if (sortKey) {
+    rows.sort((a, b) => {
+      const x = a[sortKey], y = b[sortKey];
+      if (x === null) return 1; if (y === null) return -1;
+      if (typeof x === "number" && typeof y === "number") return (x - y) * sortDir;
+      return String(x).localeCompare(String(y)) * sortDir;
+    });
+  }
+
+  const maxIdx = idxKey ? Math.max(...D[current].map((r) => r[idxKey] ?? 0)) : 1;
+  const minIdx = idxKey ? Math.min(...D[current].map((r) => r[idxKey] ?? 0)) : 0;
+
+  // 헤더
+  $("thead").innerHTML = cols.map((c) => {
+    const txt = (c.type === "city" || c.type === "rank") ? "txt" : "";
+    const arrow = sortKey === c.key ? `<span class="arrow">${sortDir < 0 ? "▼" : "▲"}</span>` : "";
+    return `<th class="${txt}" data-key="${c.key}">${c.label} ${arrow}</th>`;
+  }).join("");
+
+  // 본문
+  $("tbody").innerHTML = rows.map((r) => {
+    const tds = cols.map((c) => {
+      const v = r[c.key];
+      if (c.type === "rank") return `<td class="txt"><span class="rank-badge">${v}</span></td>`;
+      if (c.type === "city")
+        return `<td class="txt"><span class="city">${r.city}</span><span class="flag">${r.country}</span></td>`;
+      if (c.type === "bar") {
+        const w = ((v - minIdx) / (maxIdx - minIdx || 1)) * 100;
+        return `<td class="bar-cell"><div style="display:flex;align-items:center;gap:8px">
+          <div class="bar-track"><div class="bar-fill" style="width:${w}%"></div></div>
+          <span style="min-width:42px">${v.toFixed(3)}</span></div></td>`;
+      }
+      if (c.type === "core") return `<td>${v ? '<span class="tag">코어</span>' : ""}</td>`;
+      return `<td>${fmt(v, c.type)}</td>`;
+    });
+    return `<tr>${tds.join("")}</tr>`;
+  }).join("");
+
+  $("count").textContent = `${rows.length}개 도시`;
+}
+
+// 정렬 클릭
+$("thead").addEventListener("click", (e) => {
+  const key = e.target.closest("th")?.dataset.key;
+  if (!key) return;
+  if (sortKey === key) sortDir *= -1;
+  else { sortKey = key; sortDir = (key === "rank" || key === "robust_rank" || key.includes("expected") || key === "median") ? 1 : -1; }
+  render();
+});
+
+$("dataset").addEventListener("change", (e) => {
+  current = e.target.value;
+  sortKey = null; sortDir = -1;
+  render();
+});
+$("search").addEventListener("input", render);
+
+// 탭 전환
+document.querySelectorAll("nav button").forEach((b) =>
+  b.addEventListener("click", () => {
+    document.querySelectorAll("nav button").forEach((x) => x.classList.remove("active"));
+    document.querySelectorAll(".view").forEach((x) => x.classList.remove("active"));
+    b.classList.add("active");
+    $(b.dataset.view).classList.add("active");
+  })
+);
+
+// 시각화 갤러리
+$("gallery").innerHTML = D.figures.map((f) => `
+  <figure>
+    <img src="viz/${f.file}" alt="${f.title}" loading="lazy" />
+    <figcaption><b>${f.title}</b><p>${f.desc}</p></figcaption>
+  </figure>`).join("");
+
+// 라이트박스
+$("gallery").addEventListener("click", (e) => {
+  if (e.target.tagName === "IMG") {
+    $("lightbox-img").src = e.target.src;
+    $("lightbox").classList.add("open");
+  }
+});
+$("lightbox").addEventListener("click", () => $("lightbox").classList.remove("open"));
+
+render();
+</script>
+</body>
+</html>
