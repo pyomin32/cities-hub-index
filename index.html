@@ -128,8 +128,8 @@
     <div class="controls">
       <label>기준
         <select id="dataset">
-          <option value="ranking">종합 허브 지수 (동일가중)</option>
           <option value="innovation">혁신중시 지수</option>
+          <option value="ranking">종합 허브 지수 (동일가중)</option>
           <option value="robust">Robust 순위 (SMAA)</option>
         </select>
       </label>
@@ -192,7 +192,7 @@ const COLS = {
   ],
 };
 
-let current = "ranking";
+let current = "innovation";
 let sortKey = null, sortDir = -1;
 
 const $ = (id) => document.getElementById(id);

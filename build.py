@@ -35,7 +35,7 @@ def read_csv(path: Path):
 # 시각화 그림 메타데이터 (파일명 → 제목·설명)
 FIGURES = [
     ("fig1_ranking.png", "허브 지수 랭킹", "67개 도시의 종합 허브 지수 순위 막대그래프."),
-    ("fig2_heatmap.png", "지표 z-score 히트맵", "도시별 6개 지표 표준화 점수 히트맵."),
+    ("fig10_innovation_heatmap.png", "혁신중시 히트맵", "혁신 가중 시나리오 지표 히트맵."),
     ("fig3_corr.png", "지표 상관관계", "6개 지표 간 상관계수 행렬."),
     ("fig4_pca_clusters.png", "PCA 군집", "주성분 분석으로 본 도시 군집 분포."),
     ("fig5_weight_sensitivity.png", "가중치 민감도", "가중치 변화에 따른 순위 안정성."),
@@ -43,7 +43,6 @@ FIGURES = [
     ("fig7_5factor.png", "5팩터 랭킹", "5팩터 합성 기준 도시 순위."),
     ("fig8_scenarios_bump.png", "시나리오별 순위 변화", "균형·혁신중시·소득중시 시나리오 범프 차트."),
     ("fig9_rank_acceptability.png", "순위 수용도 (SMAA)", "가중치 불가지론 하 순위별 수용 확률."),
-    ("fig10_innovation_heatmap.png", "혁신중시 히트맵", "혁신 가중 시나리오 지표 히트맵."),
 ]
 
 # 6개 지표 메타데이터 (열 이름 → 한글 라벨)
